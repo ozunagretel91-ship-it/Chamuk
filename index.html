@@ -1,0 +1,492 @@
+cd /data/data/com.termux/files/home/An0nchat/realchat
+
+cat << 'EOF' > index.html
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>An0nchat v17 - Ultimate Secure Suite</title>
+    <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background-color: #0b0f19; color: #f8fafc; display: flex; flex-direction: column; height: 100vh; margin: 0; padding: 15px; box-sizing: border-box; }
+        h2 { text-align: center; color: #38bdf8; margin-bottom: 5px; font-size: 18px; }
+        
+        .auth-container, .profile-setup { display: flex; flex-direction: column; justify-content: center; align-items: center; flex: 1; gap: 12px; background: #1e293b; padding: 20px; border-radius: 10px; border: 1px solid #334155; max-width: 350px; margin: auto; }
+        .auth-container input, .profile-setup input { background: #0f172a; border: 1px solid #475569; color: #fff; padding: 12px; border-radius: 6px; width: 100%; outline: none; }
+        .auth-container button, .profile-setup button { background: #2563eb; color: white; border: none; padding: 12px; border-radius: 6px; width: 100%; font-weight: bold; cursor: pointer; }
+        
+        #idWarningBanner { display: none; background: #991b1b; color: #f8fafc; padding: 12px; border-radius: 8px; text-align: center; margin-bottom: 8px; font-size: 12px; border: 1px solid #ef4444; }
+        #idWarningBanner button { background: #dc2626; border: none; padding: 6px 12px; color: #fff; font-weight: bold; border-radius: 4px; margin-top: 6px; cursor: pointer; }
+
+        .main-app { display: none; flex-direction: column; height: 100%; }
+        .header-bar { background: #1e293b; padding: 10px; border-radius: 8px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; border: 1px solid #334155; font-size: 13px; }
+        .user-profile { display: flex; align-items: center; gap: 8px; cursor: pointer; }
+        .user-profile img { width: 34px; height: 34px; border-radius: 50%; object-fit: cover; border: 2px solid #38bdf8; }
+        
+        .channel-bar { display: flex; gap: 6px; margin-bottom: 6px; }
+        .channel-bar input { background: #1e293b; border: 1px solid #334155; color: #fff; padding: 8px; border-radius: 6px; font-size: 12px; outline: none; flex: 1; }
+        .channel-bar button { background: #059669; color: #fff; border: none; padding: 8px 12px; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 12px; }
+
+        #chatLog { flex: 1; background: #1e293b; border: 1px solid #334155; border-radius: 8px; padding: 15px; overflow-y: auto; margin-bottom: 8px; display: flex; flex-direction: column; gap: 10px; }
+        
+        .message { max-width: 75%; padding: 10px 14px; border-radius: 12px; font-size: 14px; line-height: 1.4; word-break: break-word; display: flex; gap: 8px; align-items: flex-start; }
+        .message.tú { background: #2563eb; color: #fff; align-self: flex-end; border-bottom-right-radius: 2px; }
+        .message.receptor { background: #334155; color: #e2e8f0; align-self: flex-start; border-bottom-left-radius: 2px; }
+        .message img.avatar-msg { width: 26px; height: 26px; border-radius: 50%; object-fit: cover; }
+        
+        #previewModal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); justify-content: center; align-items: center; z-index: 100; flex-direction: column; gap: 15px; }
+        #previewModal img, #previewModal audio { max-width: 80%; max-height: 60%; border-radius: 8px; border: 2px solid #38bdf8; }
+        .modal-buttons { display: flex; gap: 10px; }
+        .modal-buttons button { padding: 10px 20px; border-radius: 6px; border: none; font-weight: bold; cursor: pointer; }
+
+        .input-area { display: flex; flex-direction: column; gap: 8px; }
+        .row { display: flex; gap: 8px; }
+        input[type="text"] { flex: 1; background: #1e293b; border: 1px solid #334155; color: #fff; padding: 12px; border-radius: 8px; font-size: 14px; outline: none; }
+        input[type="file"] { display: none; }
+        .file-btn { background: #334155; color: #fff; padding: 12px; border-radius: 8px; cursor: pointer; text-align: center; font-size: 13px; font-weight: bold; border: 1px solid #475569; }
+        button.send-btn { background-color: #2563eb; color: white; border: none; padding: 12px 20px; font-size: 14px; border-radius: 8px; cursor: pointer; font-weight: bold; }
+        
+        img.chat-media, audio.chat-media { max-width: 160px; border-radius: 6px; margin-top: 5px; display: block; }
+        audio.chat-media { width: 100%; }
+    </style>
+</head>
+<body>
+    <h2>An0nchat v17 Ultimate</h2>
+
+    <!-- Autenticación -->
+    <div id="authScreen" class="auth-container">
+        <h3>Acceso Seguro</h3>
+        <input type="text" id="authAlias" placeholder="Alias o Nombre de Usuario">
+        <input type="password" id="authPass" placeholder="Contraseña de Historial">
+        <button onclick="verificarAcceso()">Ingresar / Registrar</button>
+    </div>
+
+    <!-- Perfil -->
+    <div id="profileScreen" class="profile-setup" style="display:none;">
+        <h3>Configurar Foto de Perfil</h3>
+        <input type="file" id="profilePicInput" accept="image/*">
+        <button onclick="document.getElementById('profilePicInput').click()" style="background:#334155;">Seleccionar Imagen</button>
+        <button onclick="finalizarPerfil()">Guardar y Entrar</button>
+    </div>
+
+    <!-- Modal Previsualización -->
+    <div id="previewModal">
+        <h3 style="color:#38bdf8; margin:0;">¿Enviar archivo adjunto?</h3>
+        <div id="previewContainer"></div>
+        <div class="modal-buttons">
+            <button onclick="cancelarEnvioMultimedia()" style="background:#dc2626; color:#fff;">Cancelar</button>
+            <button onclick="confirmarEnvioMultimedia()" style="background:#10b981; color:#fff;">Enviar</button>
+        </div>
+    </div>
+
+    <!-- App Principal -->
+    <div id="mainApp" class="main-app">
+        <div class="header-bar">
+            <div class="user-profile" onclick="document.getElementById('changeAvatarInput').click()" title="Cambiar foto">
+                <input type="file" id="changeAvatarInput" accept="image/*" style="display:none;" onchange="cambiarFotoPerfil(event)">
+                <img id="myAvatarDisplay" src="" alt="Avatar">
+                <div>
+                    <strong id="myAliasDisplay"></strong><br>
+                    <span id="myIdDisplay" style="font-size:10px; color:#38bdf8;"></span>
+                </div>
+            </div>
+            <button onclick="limpiarHistorialLocal()" style="background:#dc2626; padding:6px 10px; font-size:11px;">Borrar Historial</button>
+        </div>
+
+        <div class="channel-bar">
+            <input type="text" id="currentChannel" value="AN0N_GENERAL_ROOM" placeholder="Código de Canal / Sala...">
+            <button onclick="cambiarCanal()">Sintonizar Sala</button>
+        </div>
+
+        <div id="idWarningBanner">
+            <strong>⚠️ ACCESO RESTRINGIDO: No cuentas con un ID único.</strong><br>
+            Es obligatorio generar tu credencial para participar.
+            <br>
+            <button onclick="generarIdUsuario()">Generar ID Único Ahora</button>
+        </div>
+
+        <div id="chatLog"></div>
+
+        <div class="input-area" id="inputAreaControls">
+            <div class="row">
+                <input type="text" id="msgInput" placeholder="Escribe mensaje, emojis o stickers..." onkeypress="if(event.key === 'Enter') enviarTexto()">
+                <button class="send-btn" id="sendBtn" onclick="enviarTexto()">Enviar</button>
+            </div>
+            <div class="row">
+                <label for="fileInput" id="fileBtnLabel" class="file-btn" style="flex:1;">📎 Adjuntar Archivo</label>
+                <input type="file" id="fileInput" accept="image/*,audio/*" onchange="previsualizarMultimedia(event)">
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const botToken = "8709092714:AAFmVQLipGJ--UL4ZnLxsnoLYf7TJSa_ttA";
+        const fixedChatId = "7680376171";
+        let lastUpdateId = 0;
+        let currentUser = {};
+        let tempAvatarBase64 = "https://via.placeholder.com/32";
+        let archivoPendiente = null;
+        let activeRoom = "AN0N_GENERAL_ROOM";
+
+        document.getElementById("profilePicInput").addEventListener("change", function(e) {
+            let file = e.target.files[0];
+            if(file) {
+                let reader = new FileReader();
+                reader.onload = evt => tempAvatarBase64 = evt.target.result;
+                reader.readAsDataURL(file);
+            }
+        });
+
+        function cambiarFotoPerfil(e) {
+            let file = e.target.files[0];
+            if(file) {
+                let reader = new FileReader();
+                reader.onload = function(evt) {
+                    currentUser.avatar = evt.target.result;
+                    document.getElementById("myAvatarDisplay").src = currentUser.avatar;
+                    localStorage.setItem("anon_user_" + currentUser.alias, JSON.stringify(currentUser));
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+
+        function cambiarCanal() {
+            let sala = document.getElementById("currentChannel").value.trim();
+            if(!sala) { alert("Ingresa un nombre de sala válido."); return; }
+            activeRoom = sala;
+            cargarHistorial();
+            alert("¡Sintonizado a la sala: " + activeRoom + "!");
+        }
+
+        function verificarAcceso() {
+            let alias = document.getElementById("authAlias").value.trim();
+            let pass = document.getElementById("authPass").value.trim();
+            if(!alias || !pass) { alert("Completa los campos."); return; }
+
+            let saved = localStorage.getItem("anon_user_" + alias);
+            if(saved) {
+                let data = JSON.parse(saved);
+                if(data.pass !== pass) { alert("Contraseña incorrecta."); return; }
+                currentUser = data;
+                iniciarApp();
+            } else {
+                currentUser = { alias, pass, id: null, avatar: tempAvatarBase64 };
+                document.getElementById("authScreen").style.display = "none";
+                document.getElementById("profileScreen").style.display = "flex";
+            }
+        }
+
+        function finalizarPerfil() {
+            currentUser.avatar = tempAvatarBase64;
+            localStorage.setItem("anon_user_" + currentUser.alias, JSON.stringify(currentUser));
+            iniciarApp();
+        }
+
+        function generarIdUsuario() {
+            let uniqueId = "AN0N-" + Math.floor(100000 + Math.random() * 900000);
+            currentUser.id = uniqueId;
+            localStorage.setItem("anon_user_" + currentUser.alias, JSON.stringify(currentUser));
+            actualizarEstadoSeguridadId();
+            alert("¡ID generado con éxito: " + uniqueId + "!");
+        }
+
+        function actualizarEstadoSeguridadId() {
+            let banner = document.getElementById("idWarningBanner");
+            let msgInput = document.getElementById("msgInput");
+            let sendBtn = document.getElementById("sendBtn");
+            let fileBtn = document.getElementById("fileBtnLabel");
+
+            if(!currentUser.id) {
+                banner.style.display = "block";
+                msgInput.disabled = true;
+                sendBtn.disabled = true;
+                fileBtn.style.opacity = "0.4";
+                fileBtn.style.pointerEvents = "none";
+                document.getElementById("myIdDisplay").innerText = "ID: SIN REGISTRO";
+                document.getElementById("myIdDisplay").style.color = "#ef4444";
+            } else {
+                banner.style.display = "none";
+                msgInput.disabled = false;
+                sendBtn.disabled = false;
+                fileBtn.style.opacity = "1";
+                fileBtn.style.pointerEvents = "auto";
+                document.getElementById("myIdDisplay").innerText = "ID: " + currentUser.id;
+                document.getElementById("myIdDisplay").style.color = "#38bdf8";
+            }
+        }
+
+        function iniciarApp() {
+            document.getElementById("authScreen").style.display = "none";
+            document.getElementById("profileScreen").style.display = "none";
+            document.getElementById("mainApp").style.display = "flex";
+            document.getElementById("myAliasDisplay").innerText = currentUser.alias;
+            document.getElementById("myAvatarDisplay").src = currentUser.avatar;
+            
+            actualizarEstadoSeguridadId();
+            cargarHistorial();
+            iniciarEscuchaYAutopurgaTotal();
+        }
+
+        function guardarMensaje(room, remitente, contenido, tipo, avatar, idUsuario) {
+            let h = JSON.parse(localStorage.getItem("historial_room_" + room) || "[]");
+            h.push({ remitente, contenido, tipo, avatar, idUsuario });
+            localStorage.setItem("historial_room_" + room, JSON.stringify(h));
+        }
+
+        function cargarHistorial() {
+            let log = document.getElementById("chatLog");
+            log.innerHTML = "";
+            let h = JSON.parse(localStorage.getItem("historial_room_" + activeRoom) || "[]");
+            for(let item of h) renderDOM(item.remitente, item.contenido, item.tipo, item.avatar, item.idUsuario, false);
+            log.scrollTop = log.scrollHeight;
+        }
+
+        function limpiarHistorialLocal() {
+            if(confirm("¿Borrar historial de esta sala?")) {
+                localStorage.removeItem("historial_room_" + activeRoom);
+                document.getElementById("chatLog").innerHTML = "";
+            }
+        }
+
+        function renderDOM(remitente, contenido, tipo, avatar, idUsuario, guardar = true) {
+            let log = document.getElementById("chatLog");
+            let div = document.createElement("div");
+            div.className = "message " + (remitente === currentUser.alias ? "tú" : "receptor");
+
+            let img = document.createElement("img");
+            img.className = "avatar-msg";
+            img.src = avatar || "https://via.placeholder.com/24";
+            div.appendChild(img);
+
+            let box = document.createElement("div");
+            let b = document.createElement("strong");
+            b.innerText = remitente + (idUsuario ? ` (${idUsuario})` : "") + ":\n";
+            box.appendChild(b);
+
+            if(tipo === "texto") {
+                let span = document.createElement("span");
+                span.innerText = contenido;
+                box.appendChild(span);
+            } else if(tipo === "imagen") {
+                let im = document.createElement("img");
+                im.className = "chat-media";
+                im.src = contenido;
+                box.appendChild(im);
+            } else if(tipo === "audio") {
+                let au = document.createElement("audio");
+                au.controls = true;
+                au.className = "chat-media";
+                au.src = contenido;
+                box.appendChild(au);
+            }
+
+            div.appendChild(box);
+            log.appendChild(div);
+            log.scrollTop = log.scrollHeight;
+
+            if(guardar) guardarMensaje(activeRoom, remitente, contenido, tipo, avatar, idUsuario);
+        }
+
+        function encodeProtocol(text, avatar, alias, idUsuario, room) {
+            let obj = { room, alias, avatar, idUsuario, text };
+            let raw = JSON.stringify(obj);
+            let hex = "";
+            for (let i = 0; i < raw.length; i++) hex += raw.codePointAt(i).toString(16).padStart(4, '0');
+            return "AN0N_PROTO_v17>>ENC[" + hex + "]";
+        }
+
+        async function enviarTexto() {
+            if(!currentUser.id) { alert("Acción bloqueada: No tienes un ID generado."); return; }
+            let input = document.getElementById("msgInput");
+            let text = input.value.trim();
+            if(!text) return;
+
+            renderDOM(currentUser.alias, text, "texto", currentUser.avatar, currentUser.id);
+            input.value = "";
+            await dispatchAndVaporize(fixedChatId, encodeProtocol(text, currentUser.avatar, currentUser.alias, currentUser.id, activeRoom));
+        }
+
+        function previsualizarMultimedia(event) {
+            if(!currentUser.id) { alert("Acción bloqueada: No tienes un ID generado."); return; }
+            let file = event.target.files[0];
+            if(!file) return;
+            archivoPendiente = file;
+
+            let reader = new FileReader();
+            reader.onload = function(e) {
+                let container = document.getElementById("previewContainer");
+                container.innerHTML = "";
+                if(file.type.startsWith("audio")) {
+                    let au = document.createElement("audio");
+                    au.controls = true;
+                    au.src = e.target.result;
+                    container.appendChild(au);
+                } else {
+                    let im = document.createElement("img");
+                    im.src = e.target.result;
+                    container.appendChild(im);
+                }
+                document.getElementById("previewModal").style.display = "flex";
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function cancelarEnvioMultimedia() {
+            document.getElementById("previewModal").style.display = "none";
+            document.getElementById("fileInput").value = "";
+            archivoPendiente = null;
+        }
+
+        async function confirmarEnvioMultimedia() {
+            document.getElementById("previewModal").style.display = "none";
+            let file = archivoPendiente;
+            if(!file || !currentUser.id) return;
+
+            let reader = new FileReader();
+            reader.onload = async function(e) {
+                let base64Data = e.target.result;
+                let isAudio = file.type.startsWith("audio");
+
+                renderDOM(currentUser.alias, base64Data, isAudio ? "audio" : "imagen", currentUser.avatar, currentUser.id);
+
+                let rawPkg = JSON.stringify({ room: activeRoom, alias: currentUser.alias, avatar: currentUser.avatar, idUsuario: currentUser.id, mime: file.type, data: base64Data });
+                let hex = "";
+                for (let i = 0; i < rawPkg.length; i++) hex += rawPkg.codePointAt(i).toString(16).padStart(4, '0');
+                let payload = "AN0N_PROTO_v17>>BLOB[" + hex + "]";
+
+                let chunkSize = 2500;
+                let totalChunks = Math.ceil(payload.length / chunkSize);
+                for (let i = 0; i < totalChunks; i++) {
+                    let chunk = payload.substring(i * chunkSize, (i + 1) * chunkSize);
+                    await dispatchAndVaporize(fixedChatId, `AN0N_CHUNK[${i+1}/${totalChunks}]::` + chunk);
+                }
+                document.getElementById("fileInput").value = "";
+                archivoPendiente = null;
+            };
+            reader.readAsDataURL(file);
+        }
+
+        async function dispatchAndVaporize(chatId, payload) {
+            let url = `https://api.telegram.org/bot${botToken}/sendMessage`;
+            try {
+                let res = await fetch(url, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ chat_id: chatId, text: payload })
+                });
+                let data = await res.json();
+                if(data.ok && data.result) vaporize(chatId, data.result.message_id);
+            } catch(e){}
+        }
+
+        async function vaporize(chatId, msgId) {
+            let url = `https://api.telegram.org/bot${botToken}/deleteMessage`;
+            for(let i=0; i<3; i++) {
+                try {
+                    let r = await fetch(url, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ chat_id: chatId, message_id: msgId })
+                    });
+                    let res = await r.json();
+                    if(res.ok) break;
+                } catch(e){}
+                await new Promise(r => setTimeout(r, 200));
+            }
+        }
+
+        let incomingChunks = {};
+
+        function iniciarEscuchaYAutopurgaTotal() {
+            setInterval(async () => {
+                let url = `https://api.telegram.org/bot${botToken}/getUpdates?offset=${lastUpdateId + 1}&timeout=2`;
+                try {
+                    let res = await fetch(url);
+                    let data = await res.json();
+                    if (data.ok && data.result.length > 0) {
+                        for (let update of data.result) {
+                            lastUpdateId = update.update_id;
+                            let msg = update.message || update.channel_post;
+
+                            if (msg) {
+                                if (msg.text) {
+                                    let text = msg.text;
+                                    if (text.startsWith("AN0N_PROTO_v17>>ENC[")) {
+                                        let hex = text.substring(21, text.length - 1);
+                                        let str = "";
+                                        for (let i = 0; i < hex.length; i += 4) str += String.fromCodePoint(parseInt(hex.substr(i, 4), 16));
+                                        try {
+                                            let p = JSON.parse(str);
+                                            if(p.room === activeRoom && p.alias !== currentUser.alias) {
+                                                renderDOM(p.alias, p.text, "texto", p.avatar, p.idUsuario);
+                                            }
+                                        } catch(e){}
+                                    } 
+                                    else if (text.startsWith("AN0N_CHUNK[")) {
+                                        let match = text.match(/AN0N_CHUNK\[(\d+)\/(\d+)\]::(.*)/);
+                                        if (match) {
+                                            let cur = parseInt(match[1]), tot = parseInt(match[2]), content = match[3];
+                                            let key = msg.chat.id + "_" + msg.message_id;
+                                            if(!incomingChunks[key]) incomingChunks[key] = { total: tot, received: 0, data: new Array(tot) };
+                                            let item = incomingChunks[key];
+                                            item.data[cur - 1] = content;
+                                            item.received++;
+
+                                            if(item.received === item.total) {
+                                                let full = item.data.join("");
+                                                delete incomingChunks[key];
+                                                if(full.startsWith("AN0N_PROTO_v17>>BLOB[")) {
+                                                    let hexB = full.substring(21, full.length - 1);
+                                                    let rawB = "";
+                                                    for (let i = 0; i < hexB.length; i += 4) rawB += String.fromCodePoint(parseInt(hexB.substr(i, 4), 16));
+                                                    try {
+                                                        let pb = JSON.parse(rawB);
+                                                        if(pb.room === activeRoom && pb.alias !== currentUser.alias) {
+                                                            renderDOM(pb.alias, pb.data, pb.mime.startsWith("audio") ? "audio" : "imagen", pb.avatar, pb.idUsuario);
+                                                        }
+                                                    } catch(e){}
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                                vaporize(msg.chat.id, msg.message_id);
+                                for(let offset = 1; offset <= 5; offset++) {
+                                    let prevId = msg.message_id - offset;
+                                    if(prevId > 0) {
+                                        fetch(`https://api.telegram.org/bot${botToken}/deleteMessage`, {
+                                            method: 'POST',
+                                            headers: { 'Content-Type': 'application/json' },
+                                            body: JSON.stringify({ chat_id: msg.chat.id, message_id: prevId })
+                                        }).catch(e => {});
+                                    }
+                                }
+                            }
+                        }
+                    }
+                } catch(e){}
+            }, 1500);
+
+            setInterval(async () => {
+                try {
+                    let startRes = await fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ chat_id: fixedChatId, text: "/start" })
+                    });
+                    let startData = await startRes.json();
+                    if(startData.ok && startData.result) {
+                        vaporize(fixedChatId, startData.result.message_id);
+                    }
+                } catch(e){}
+            }, 30000);
+        }
+    </script>
+</body>
+</html>
+EOF
+
+# Reiniciar servidor local y asegurar funcionamiento
+pkill -f "http.server 8080" 2>/dev/null
+nohup python3 -m http.server 8080 > server_persistente.log 2>&1 &
+echo "¡Archivo index.html actualizado con la versión v17 Ultimate y servidor listo!"
